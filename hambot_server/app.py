@@ -22,7 +22,7 @@ def create_app(*args, **kwargs):
         SECRET_KEY=str(uuid.uuid4()),
         KEY_SHEET='keys.key',
         TIME_STR='%m/%d/%Y %H:%M:%S',
-        LOG_FILE=os.path.join(app.instance_path, 'temp.log'),
+        TEMP_LOG=os.path.join(app.instance_path, 'temp.log'),
         UPLOAD_PATH=os.path.join(app.instance_path, 'uploads'),
         USERNAME='USER',
         PASSWORD='PASS'
@@ -42,8 +42,8 @@ def create_app(*args, **kwargs):
     
     if not os.path.exists(app.config['UPLOAD_PATH']):
         os.makedirs(app.config['UPLOAD_PATH'])
-    if not os.path.exists(app.config['LOG_FILE']):
-        with open(app.config['LOG_FILE'], 'a+') as f:
+    if not os.path.exists(app.config['TEMP_LOG']):
+        with open(app.config['TEMP_LOG'], 'a+') as f:
             f.close()
 
     app.register_blueprint(views)

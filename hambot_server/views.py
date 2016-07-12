@@ -15,14 +15,25 @@ views = flask.Blueprint('views', __name__)
 auth = HTTPBasicAuth()
 
 
+@views.before_request
+def write_to_log():
+    if app.config.get('LOG_FILE'):
+        lines = []
+        for k, v in flask.request.headers.items():
+            lines.append(k + ': ' + v)
+        path = os.path.join(app.instance_path, app.config['LOG_FILE'])
+        with open(path, 'a+') as f:
+            f.writelines(lines)
+
+
 @views.route('/')
 def index():
     """GET index page."""
 
     return flask.render_template(
         'index.htm',
-        images=CamPhoto.get_all(app.config['UPLOAD_PATH']),
-        temp_log=LogEntry.get_all(app.config['LOG_FILE']),
+        images=CamPhoto.get_all(app.config['UPLOAD_PATH'])[-4:],
+        temp_log=LogEntry.get_all(app.config['TEMP_LOG']),
         time_str=app.config['TIME_STR']
     )
 
@@ -34,20 +45,19 @@ def time_str():
     return flask.jsonify(time_str=app.config['TIME_STR'])
 
 
-@views.route('/images/<filename>')
-def image(filename):
-    """GET an uploaded image by filename."""
-    
-    return flask.send_from_directory(app.config['UPLOAD_PATH'], filename)
+@views.route('/images/', methods=['GET'])
+def images():
+    """GET an index of uploaded images."""
+
+    images = CamPhoto.get_all(app.config['UPLOAD_PATH'])[-4:]
+    return flask.jsonify([dict(
+        url=flask.url_for('views.image', filename=i.path)) for i in images])
 
 
-@views.route('/images/', methods=['GET', 'POST'])
+@views.route('/images/', methods=['POST'])
 @auth.login_required
 def post_image():
     """POST an image from the webcam client."""
-
-    if flask.request.method == 'GET':
-        flask.abort(501)  # Do not allow direct access to img index.
 
     f = flask.request.files.get('file')
     filename, ext = os.path.splitext(f.filename)
@@ -57,9 +67,14 @@ def post_image():
     filehash = Hashids(app.config['SECRET_KEY']).encode(int(time()))
     f.save(os.path.join(app.config['UPLOAD_PATH'], filehash + ext))
     
-    res = flask.jsonify(dict(status='success')), 201
-    res.headers['Location'] = flask.url_for('image', filename=filename)
-    return res
+    return flask.jsonify(dict(status='success')), 201
+
+
+@views.route('/images/<filename>')
+def image(filename):
+    """GET an uploaded image by filename."""
+    
+    return flask.send_from_directory(app.config['UPLOAD_PATH'], filename)
 
 
 @views.route('/log/')
@@ -69,7 +84,7 @@ def log():
     return flask.jsonify([dict(
         timestamp=l.timestamp,
         temp=l.temperature
-    ) for l in LogEntry.get_all(os.config['LOG_FILE'])])
+    ) for l in LogEntry.get_all(os.config['TEMP_LOG'])])
 
 
 @views.route('/log/', methods=['POST'])
@@ -81,18 +96,16 @@ def post_log():
     if not data.get('timestamp') or not data.get('temp'):
         flask.abort(400)
 
-    LogEntry.add_new(app.config['LOG_FILE'], LogEntry.from_dict(data))
+    LogEntry.add_new(app.config['TEMP_LOG'], LogEntry.from_dict(data))
 
-    res = flask.jsonify(dict(status='success')), 201
-    res.headers['Location'] = flask.url_for('temp_log')
-    return res
+    return flask.jsonify(dict(status='success')), 201
 
 
 @views.route('/log/chart/')
 def log_chart():
     """Use PyGal to GET an svg chart of the latest log data."""
 
-    data = LogEntry.get_latest(app.config['LOG_FILE'])
+    data = LogEntry.get_latest(app.config['TEMP_LOG'])
 
     chart = pygal.Line(x_label_rotation=75)
     chart.x_labels = map(
@@ -111,7 +124,7 @@ def verify_password(username, password):
     e = EnigmaOperator(os.path.join(app.instance_path, 'gelheim.key'))
     plaintext = e.decrypt(password)
 
-    if (not username == app.config['USER_NAME'] or
+    if (not username == app.config['USERNAME'] or
        not plaintext == app.config['PASSWORD']):
        return False
     return True
