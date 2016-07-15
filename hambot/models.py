@@ -1,14 +1,13 @@
 import flask
-from flask import current_app as app
 
 import hambot.utils as u
 
 
 class Temperature():
 
-    file_path = app.config['TEMPERATURE_LOG_PATH']
-
-    def __init__(self, reading, id=u.id(), timestamp=u.now()):
+    def __init__(
+          self, reading, id=u.id(), timestamp=u.now(),
+          file_path=flask.current_app.config['TEMPERATURE_LOG_PATH']):
         self.id = id
         self.timestamp = timestamp
         self.reading = reading
@@ -49,8 +48,7 @@ class Temperature():
 
     def __str__(self):
         return '{id} {timestamp} {reading}\n'.format(
-            id=self.id,
-            timestamp=self.timestamp.isoformat(),
+            id=self.id, timestamp=self.timestamp.isoformat(),
             reading=str(self.reading)
         )
 
@@ -60,10 +58,10 @@ class Temperature():
 
 class Image(db.Model):
 
-    upload_path = app.config['IMAGE_UPLOAD_PATH']
-    ext = app.config['IMAGE_UPLOAD_EXT']
-
-    def __init__(self, filename):
+    def __init__(
+          self, filename,
+          upload_path=flask.current_app.config['IMAGE_UPLOAD_PATH'],
+          ext=flask.current_app.config['IMAGE_UPLOAD_EXT']):
         name, ext = os.path.splitext(filename)
         self.filename = filename
         self.url = flask.send_from_directory(
@@ -87,8 +85,7 @@ class Image(db.Model):
 
     def to_dict(self):
         return dict(
-            image_url=self.url,
-            timestamp=self.timestamp,
+            image_url=self.url, timestamp=self.timestamp,
             uri=self.get_uri()
         )
 

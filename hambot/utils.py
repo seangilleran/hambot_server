@@ -2,8 +2,7 @@ from datetime import datetime
 import time
 import pytz
 
-from flask import current_app as app
-
+import flask
 
 #
 # Time Helpers
@@ -33,8 +32,8 @@ def isostrptime(timestr):
 # Data Helpers
 #
 
-def id():
+def id(seed=flask.current_app.secret_key):
     from hashids import Hashids
-    hid = Hashids(app.secret_key, 8)
+    hid = Hashids(seed, 8)
     a, b = str(time.time()).split('.')
     return hid.encode(int(b))
