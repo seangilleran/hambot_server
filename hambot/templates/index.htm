@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="300; URL={{ url_for('index') }}">
   <title>Hambot</title>
   <link rel="stylesheet"
         href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
@@ -30,7 +31,7 @@
     <h1>Hambot</h1>
   </header>
   <div class="container-fluid">
-    <div id="camDiv" class="col-md-4">
+    <div id="camDiv" class="col-md-5">
     <article class="panel panel-primary">
       <div class="panel-heading">
         <h3 class="panel-title">Hamcam</h3>
@@ -45,11 +46,11 @@
           <div class="carousel-inner" role="listbox">
             {% for img in images %}
             <div class="item{% if loop.index0 == 0 %} active{% endif %}">
-              <img src="{{ url_for('views.image', filename=img.path) }}"
-                    alt="{{ img.timestamp.strftime(time_str) }}"
+              <img src="{{ url_for('ImagesView:get', filename=img.filename) }}"
+                    alt="{{ img.timestamp }}"
                     width="100%">
               <div class="carousel-caption">
-                <strong>{{ img.timestamp.strftime(time_str) }}</strong>
+                <strong>{{ img.timestamp }}</strong>
               </div>
             </div>
             {% endfor %}
@@ -65,7 +66,7 @@
         </div>
       </div>
     </article>
-    </div><div class="col-md-8">
+    </div><div class="col-md-7">
     <article class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Temperature Log</h3>
@@ -75,16 +76,16 @@
         <table id="log" class="table">
           <thead>
             <tr>
-              <td>Temperature</td>
               <td>Time</td>
+              <td>Temperature</td>
             </tr>
           </thead>
           <tbody>
             {% for log in temp_log %}
             <tr><td>
-              {{ log.temperature }}&deg;C
+              {{ log.timestamp }}
             </td><td>
-              {{ log.timestamp.strftime(time_str) }}
+              {{ log.reading }}&deg;C
             </td></tr>
             {% endfor %}
           </tbody>
@@ -93,7 +94,8 @@
     </article>
     </div>
   </div>
-  <footer class="text-muted">
+  <br>
+  <footer class="text-muted text-center">
     Hambot &copy;2016 Sean Gilleran. Free to use under MIT license.
   </footer>
 </main>
@@ -104,7 +106,7 @@
 <script src="http://kozea.github.com/pygal.js/javascripts/pygal-tooltips.js"></script>
 <script>
   $(document).ready(function () {
-    $.get("{{ url_for('views.log_chart') }}", function (data) {
+    $.get("{{ url_for('TemperatureLogView:get_chart_1') }}", function (data) {
       $("#chart").html(data)
     });
   });

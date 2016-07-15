@@ -16,9 +16,10 @@ class TemperatureLogView(FlaskView):
     @route('/')
     @route('/max=<int:max_count>')
     def index(self, max_count=None):
-        rv = [t.to_dict() for t in Temperature.get_all(max_count)]
-        if not rv:
+        data = Temperature.get_all(max_count)
+        if not data:
             return ('', 204)
+        rv = [t.to_dict() for t in data]
         return flask.jsonify(rv)
 
     @route('/chart/')
@@ -26,9 +27,10 @@ class TemperatureLogView(FlaskView):
     def get_chart(self, max_count=None):
         from pygal import Line
 
-        data = [t.to_dict() for t in Temperature.get_all(max_count)]
+        data = Temperature.get_all(max_count)
         if not data:
             return ('', 204)
+        data = [t.to_dict() for t in data]
         chart = Line(x_label_rotation=75)
         chart.x_labels = [t['timestamp'] for t in data]
         chart.add('°C', [float(t['reading']) for t in data])
@@ -63,9 +65,10 @@ class ImagesView(FlaskView):
     @route('/')
     @route('/max=<int:max_count>')
     def index(self, max_count=None):
-        rv = [i.to_dict() for i in Image.get_all(max_count)]
-        if not rv:
+        data = Image.get_all(max_count)
+        if not data:
             return ('', 204)
+        rv = [i.to_dict() for i in data]
         return flask.jsonify(rv)
 
     def get(self, filename):

@@ -1,0 +1,2 @@
+recursive-include hambot/templates *
+recursive-include hambot/static *

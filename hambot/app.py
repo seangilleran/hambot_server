@@ -51,6 +51,14 @@ def create_app(*args, **kwargs):
 
     models.init_app(app)
 
+    @app.route('/')
+    def index():
+        return flask.render_template(
+            'index.htm',
+            images=models.Image.get_all(7),
+            temp_log=models.Temperature.get_all(12)
+        )
+
     @auth.verify_token
     def verify_token(token):
         from string import ascii_uppercase
