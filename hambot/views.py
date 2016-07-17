@@ -1,3 +1,4 @@
+import os
 import logging
 
 import flask
@@ -28,8 +29,6 @@ class TemperatureLogView(FlaskView):
         from pygal import Line
 
         data = Temperature.get_all(max_count)
-        if not data:
-            return ('', 204)
         data = [t.to_dict() for t in data]
         chart = Line(x_label_rotation=75)
         chart.x_labels = [t['timestamp'] for t in data]
@@ -45,7 +44,7 @@ class TemperatureLogView(FlaskView):
     @auth.login_required
     def post(self):
         data = flask.request.get_json()
-        if not data.get('reading'):
+        if not data or not data.get('reading'):
             flask.abort(415)
         t = Temperature(
             data['reading'],
@@ -75,11 +74,19 @@ class ImagesView(FlaskView):
         return flask.send_from_directory(
             app.config['IMAGE_UPLOAD_PATH'], filename)
 
+    def before_post(self):
+        logging.info('Request: POST Image')
+        for h in flask.request.headers:
+            logging.info('  {h}'.format(h=h))
+        logging.info('  {d}'.format(d=flask.request.get_json() or 'No data'))
+
     @auth.login_required
     def post(self):
         f = flask.request.files.get('file')
+        if not f or not f.filename:
+            flask.abort(415)
         ext = os.path.splitext(f.filename)[1]
-        if not f or not ext == app.config[IMAGE_UPLOAD_EXT]:
+        if not ext == app.config['IMAGE_UPLOAD_EXT']:
             flask.abort(415)
         i = Image.save_from_upload(f)
         res = flask.make_response('', 201)

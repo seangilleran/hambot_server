@@ -32,7 +32,7 @@ class Temperature():
             del rv[:-max_count]
         logging.debug('Retrieved {n} log entries from {p}'.format(
             n=len(rv), p=cls.file_path))
-        return rv or None
+        return rv
 
     def to_dict(self):
         return dict(
@@ -41,7 +41,7 @@ class Temperature():
     def save(self):
         with open(self.file_path, 'a') as f:
             f.write(str(self) + os.linesep)
-        logging.info('Saved new temperature log entry to {p}'.format(
+        logging.debug('Saved new temperature log entry to {p}'.format(
             p=self.file_path))
 
     def __str__(self):
@@ -70,9 +70,9 @@ class Image():
         from werkzeug.utils import secure_filename
 
         filename = secure_filename(f.filename)
-        f.save(os.path.join(self.upload_path, filename))
+        f.save(os.path.join(cls.upload_path, filename))
         logging.info('Saved new image to {p}'.format(
-            p=os.path.join(self.upload_path, filename)))
+            p=os.path.join(cls.upload_path, filename)))
         return cls(filename)
 
     @classmethod
@@ -86,7 +86,7 @@ class Image():
             del rv[:-max_count]
         logging.debug('Retrieved {n} images from {p}'.format(
             n=len(rv), p=cls.upload_path))
-        return rv or None
+        return rv
 
     def to_dict(self):
         return dict(

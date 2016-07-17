@@ -61,19 +61,15 @@ def create_app(*args, **kwargs):
 
     @auth.verify_token
     def verify_token(token):
-        from string import ascii_uppercase
         from re import sub
 
         # Override encryption for debug mode.
         if app.debug and token == app.config['AUTH_TOKEN']:
             return True
 
-        e = EnigmaOperator(app.config['AUTH_KEY_PATH'], int(token[:2]))
-        ciphertext = sub('[^A-Z]', '', token[2:].strip())
-        if not ciphertext:
-            return False
-        plaintext = e.decrypt(ciphertext)
-        if ciphertext == app.config['AUTH_TOKEN']:
+        e = EnigmaOperator(app.config['AUTH_KEY_PATH'])
+        ciphertext = sub('[^A-Z]', '', token.strip())
+        if e.decrypt(ciphertext) == app.config['AUTH_TOKEN']:
             return True
         return False
 
